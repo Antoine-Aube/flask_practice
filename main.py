@@ -34,6 +34,8 @@ class Video(Resource):
     @marshal_with(resource_fields)
     def get(self, video_id):
         result = VideoModel.query.filter_by(id=video_id).first()
+        if not result:
+            abort(404, message="Could not find video with that id")
         return result
     
     @marshal_with(resource_fields)
@@ -49,11 +51,19 @@ class Video(Resource):
         return video, 201
     
     def delete(self, video_id):
-        del videos[video_id]
+        result = VideoModel.query.filter_by(id=video_id).first()
+        db.session.delete(result)
+        db.session.commit()
         return '', 204
+
+
+class VideoList(Resource):
+    @marshal_with(resource_fields)
+    def get(self):
+        videos = VideoModel.query.all()
+        return videos       
         
-        
-    
+api.add_resource(VideoList, "/videos")    
 api.add_resource(Video, "/video/<int:video_id>")
 
 if __name__ == "__main__":
